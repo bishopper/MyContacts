@@ -1,7 +1,9 @@
-﻿using System;
+﻿using MyContacts.Services;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -12,13 +14,15 @@ namespace MyContacts
 {
     public partial class frmAddOrEdit : Form
     {
-        IContactsRepository repository;
+
+        Contact_DBEntities db = new Contact_DBEntities();
+        // IContactsRepository repository;
         public int contactId = 0;
 
         public frmAddOrEdit()
         {
             InitializeComponent();
-            repository = new ContactsRepository();
+            // repository = new EFContactRepository();
         }
 
         private void frmAddOrEdit_Load(object sender, EventArgs e)
@@ -29,13 +33,14 @@ namespace MyContacts
             }else
             {
                 this.Text = "ویرایش شخص";
-                DataTable dt = repository.SelectRow(contactId);
-                txtName.Text = dt.Rows[0][1].ToString();
-                txtFamily.Text = dt.Rows[0][2].ToString();
-                txtMobile.Text = dt.Rows[0][3].ToString();
-                txtEmail.Text = dt.Rows[0][4].ToString();
-                txtAge.Text = dt.Rows[0][5].ToString();
-                txtAddress.Text = dt.Rows[0][6].ToString();
+                // DataTable dt = repository.SelectRow(contactId);
+                MyContact contact = db.MyContacts.Find(contactId);
+                txtName.Text = contact.Name;
+                txtFamily.Text = contact.Family;
+                txtMobile.Text = contact.Mobile;
+                txtEmail.Text = contact.Email;
+                txtAge.Text = contact.Age.ToString();
+                txtAddress.Text = contact.Address;
                 btnSubmit.Text = "ویرایش";
             }
         }
@@ -77,26 +82,32 @@ namespace MyContacts
         {
             if(validateInput())
             {
-                bool isSuccess;
+                // bool isSuccess;
+               
                 if (contactId == 0)
                 {
-                    isSuccess = repository.Insert(txtName.Text, txtFamily.Text, txtMobile.Text, txtEmail.Text, (int)txtAge.Value, txtAddress.Text);
+                    MyContact contact = new MyContact();
+                    contact.Name = txtName.Text;
+                    contact.Family = txtFamily.Text;
+                    contact.Age = (int)txtAge.Value;
+                    contact.Address = txtAddress.Text;
+                    contact.Mobile = txtMobile.Text;
+                    db.MyContacts.Add(contact);
+                     
                 }else
                 {
-                    isSuccess = repository.Update(contactId,txtName.Text,txtFamily.Text,txtMobile.Text,txtEmail.Text,(int)txtAge.Value,txtAddress.Text);
+                    var contact = db.MyContacts.Find(contactId);
+                    contact.Name = txtName.Text;
+                    contact.Family = txtFamily.Text;
+                    contact.Age = (int) txtAge.Value;
+                    contact.Email = txtEmail.Text;
+                    contact.Address = txtAddress.Text;
+                    contact.Mobile= txtMobile.Text;
                 }
+                db.SaveChanges();
 
-
-
-                if(isSuccess==true)
-                {
                     MessageBox.Show("عملیات با موفقیت انجام شد", "موفقیت", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK; 
-                }
-                else
-                {
-                    MessageBox.Show("عملیات با شکست انجام شد","خطا",MessageBoxButtons.OK,MessageBoxIcon.Error);
-                }
+                    DialogResult = DialogResult.OK;
             }
         }
     }
